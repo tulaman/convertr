@@ -1,6 +1,6 @@
 = convertr
 
-Description goes here.
+Convertr works with database and handles converting tasks. It fetches files from remote sources and converts them to appropriate formats with ffmpeg.
 
 == Note on Patches/Pull Requests
  

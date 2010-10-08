@@ -5,12 +5,13 @@ begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
     gem.name = "convertr"
-    gem.summary = %Q{TODO: one-line summary of your gem}
-    gem.description = %Q{TODO: longer description of your gem}
+    gem.summary = %Q{Useful utility for converting video files with ffmpeg}
+    gem.description = %Q{Convertr works with database and handles converting tasks. It fetches files from remote sources and converts them to appropriate formats with ffmpeg}
     gem.email = "ilya.lityuga@gmail.com"
     gem.homepage = "http://github.com/tulaman/convertr"
-    gem.authors = ["Ilya Lityuga"]
-    gem.add_development_dependency "thoughtbot-shoulda", ">= 0"
+    gem.authors = ["Ilya Lityuga", "Alexander Svetkin"]
+    gem.add_development_dependency "shoulda", ">= 0"
+    gem.add_development_dependency "activerecord", ">= 3.0.0"
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
   end
   Jeweler::GemcutterTasks.new
