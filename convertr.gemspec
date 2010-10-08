@@ -25,6 +25,8 @@ Gem::Specification.new do |s|
      "README.rdoc",
      "Rakefile",
      "VERSION",
+     "bin/convertr",
+     "convertr.gemspec",
      "lib/convertr.rb",
      "test/helper.rb",
      "test/test_convertr.rb"
