@@ -1,16 +1,12 @@
 require 'optparse'
-require 'ostruct'
-require 'yaml'
-require 'active_record'
-require 'active_record/railtie'
 
 module Convertr
   class Runner
     class OptParser # {{{
       def self.parse(args)
-        options = OpenStruct.new
-        options.db_config = "~/.convertr/database.yml"
-        options.config = "~/.convertr/settings.yml"
+        options = Convertr::Config.instance
+        options.db_config_file = "~/.convertr/database.yml"
+        options.settings_file = "~/.convertr/settings.yml"
         options.max_tasks = 0
         options.force_reset_database = false
         opts = OptionParser.new do |opts|
@@ -18,15 +14,15 @@ module Convertr
           opts.separator ""
           opts.separator "Specific options:"
 
-          opts.on("-d", "--db_config [PATH_TO_DB_CONFIG]",
+          opts.on("-d", "--db_config_file [PATH_TO_DB_CONFIG]",
                 "Specify path to database.yml file") do |dbc|
-            options.db_config = dbc
-                end
+            options.db_config_file = dbc
+          end
 
-          opts.on("-c", "--config [PATH_TO_CONFIG]",
+          opts.on("-c", "--settings_file [PATH_TO_CONFIG]",
                 "Specify path to settings.yml file") do |c|
-            options.config = c
-                end
+            options.settings_file = c
+          end
 
           opts.on("-m", "--max_tasks N", Integer,
                 "Specify the maximum tasks to complete") do |m|
@@ -46,18 +42,12 @@ module Convertr
     attr_reader :db_config, :config, :options
 
     def initialize(opts) # {{{
-      @options = Convertr::Runner::OptParser.parse(opts)
-      enviroment = ENV['RAILS_ENV'] || 'development'
-      @db_config = YAML.load_file(@options.db_config)[enviroment]
-      @config = YAML.load_file(@options.config)[enviroment]
+      config = Convertr::Runner::OptParser.parse(opts)
+      Convertr.configure(config)
     end
     # }}}
     def run # {{{
-      ActiveRecord::Base.establish_connection(@db_config)
-      require 'convertr/file'
-      require 'convertr/task'
-      Convertr::Migration.down if @options.force
-      Convertr::Migration.up unless Convertr::File.table_exists? && Convertr::Task.table_exists?
+      puts "Running"
     end # }}}
   end
 end
