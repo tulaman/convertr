@@ -1,11 +1,11 @@
 #!/usr/bin/env ruby
 
-$LOAD_PATH << File.join(File.dirname(__FILE__), '..')
-require 'lib/convertr'
+$LOAD_PATH << File.join(File.dirname(__FILE__), '..', 'lib')
+require 'convertr'
 
 if ARGV.any? { |arg| %w(--version -v).any? { |flag| arg == flag } }
   puts "Convertr #{Convertr::Version}"
   exit 0
 end
 
-Convertr::Runner.new(ARGV)
+Convertr::Runner.new(ARGV).run
