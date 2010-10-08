@@ -1,7 +1,7 @@
 require 'convertr/runner'
 require 'convertr/migration'
-require 'convertr/file'
-require 'convertr/task'
+require 'convertr/scheduler'
+require 'convertr/scheduler_factory'
 
 module Convertr
   module Version

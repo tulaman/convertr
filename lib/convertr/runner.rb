@@ -38,7 +38,7 @@ module Convertr
             options.force = f
                 end
         end
-        opts.parse!
+        opts.parse!(args)
         options
       end
     end # }}}
@@ -54,6 +54,8 @@ module Convertr
     # }}}
     def run # {{{
       ActiveRecord::Base.establish_connection(@db_config)
+      require 'convertr/file'
+      require 'convertr/task'
       Convertr::Migration.down if @options.force
       Convertr::Migration.up unless Convertr::File.table_exists? && Convertr::Task.table_exists?
     end # }}}
