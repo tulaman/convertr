@@ -3,10 +3,10 @@ require 'test/helper'
 class TestTask < Test::Unit::TestCase
   context "Tasks" do
     should "have for_convertor scope" do
-      assert_equal 0, Convertr::Task.for_convertor('unknown').length
+      assert_equal 2, Convertr::Task.for_convertor('convertor1').size
     end
     should "have not_completed scope" do
-      assert_equal 0, Convertr::Task.not_completed.length
+      assert_equal 3, Convertr::Task.not_completed.size
     end
   end
 

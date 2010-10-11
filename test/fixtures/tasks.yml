@@ -1,0 +1,14 @@
+not_completed:
+  file_id: 3 # without convertor
+  bitrate: 512
+  convert_status: NONE
+
+for_convertor1_1:
+  file_id: 2
+  bitrate: 1024
+  convert_status: NONE
+
+for_convertor1_2:
+  file_id: 2
+  bitrate: 1024
+  convert_status: NONE

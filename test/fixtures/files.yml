@@ -1,5 +1,18 @@
-one:
+with_convertor1_1:
   id: 1
+  filename: test.avi
+  location: /tmp
+  enqueue_at: <%= Time.now %>
+  convertor: convertor1
+  broadcast_at: <%= Time.now - 3600 * 24 %>
+  src_size: 12345
+  duration: 12345
+  aspect: 3x4
+  width: 640
+  height: 480
+
+with_convertor1_2:
+  id: 2
   filename: test.avi
   location: /tmp
   enqueue_at: <%= Time.now %>
@@ -10,5 +23,27 @@ one:
   aspect: 3x4
   width: 640
   height: 480
-  src_deleted_at:
-  convertor_deleted_at:
+
+without_convertor_1:
+  id: 3
+  filename: test.avi
+  location: /tmp
+  enqueue_at: <%= Time.now %>
+  broadcast_at: <%= Time.now - 3600 * 24 %>
+  src_size: 12345
+  duration: 12345
+  aspect: 3x4
+  width: 640
+  height: 480
+
+without_convertor_2:
+  id: 4
+  filename: test.avi
+  location: /tmp
+  enqueue_at: <%= Time.now %>
+  broadcast_at: <%= Time.now %>
+  src_size: 12345
+  duration: 12345
+  aspect: 3x4
+  width: 640
+  height: 480
