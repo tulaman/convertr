@@ -2,7 +2,6 @@ require 'ostruct'
 require 'active_record'
 require 'active_record/railtie'
 require 'convertr/runner'
-require 'convertr/migration'
 require 'convertr/scheduler'
 require 'convertr/scheduler_factory'
 
@@ -33,7 +32,6 @@ module Convertr
     ActiveRecord::Base.establish_connection(conf.db_config)
     require 'convertr/file'
     require 'convertr/task'
-    Convertr::Migration.down if conf.force
-    Convertr::Migration.up unless Convertr::File.table_exists? && Convertr::Task.table_exists?
+    $stderr.puts "Tables not found" && exit(1) unless Convertr::File.table_exists? && Convertr::Task.table_exists?
   end
 end

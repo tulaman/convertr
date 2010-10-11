@@ -12,8 +12,8 @@ module Convertr
         t.string :aspect, :limit => 10
         t.integer :width
         t.integer :height
-        t.boolean :src_deleted
-        t.boolean :convertor_deleted
+        t.datetime :src_deleted_at
+        t.datetime :convertor_deleted_at
       end
 
       create_table :tasks do |t|
@@ -31,8 +31,8 @@ module Convertr
     end
 
     def self.down
-      drop_table :task
-      drop_table :file
+      drop_table :tasks
+      drop_table :files
     end
   end
 end

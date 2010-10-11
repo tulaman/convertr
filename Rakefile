@@ -1,5 +1,6 @@
 require 'rubygems'
 require 'rake'
+load 'lib/tasks/convertr.rake'
 
 begin
   require 'jeweler'
@@ -40,7 +41,7 @@ rescue LoadError
   end
 end
 
-task :test => :check_dependencies
+task :test => [:check_dependencies, 'convertr:prepare_test']
 
 task :default => :test
 

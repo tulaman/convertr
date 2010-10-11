@@ -1,0 +1,14 @@
+one:
+  id: 1
+  filename: test.avi
+  location: /tmp
+  enqueue_at: <%= Time.now %>
+  convertor: convertor1
+  broadcast_at: <%= Time.now %>
+  src_size: 12345
+  duration: 12345
+  aspect: 3x4
+  width: 640
+  height: 480
+  src_deleted_at:
+  convertor_deleted_at:
