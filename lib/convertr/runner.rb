@@ -8,7 +8,6 @@ module Convertr
         options.db_config_file = "~/.convertr/database.yml"
         options.settings_file = "~/.convertr/settings.yml"
         options.max_tasks = 0
-        options.force_reset_database = false
         opts = OptionParser.new do |opts|
           opts.banner = "Usage: convertr [options]"
           opts.separator ""
@@ -28,11 +27,6 @@ module Convertr
                 "Specify the maximum tasks to complete") do |m|
             options.max_tasks = m
                 end
-
-          opts.on("-f", "--force",
-                "Force recreating database tables") do |f|
-            options.force = f
-                end
         end
         opts.parse!(args)
         options
@@ -42,12 +36,12 @@ module Convertr
     attr_reader :db_config, :config, :options
 
     def initialize(opts) # {{{
-      config = Convertr::Runner::OptParser.parse(opts)
-      Convertr.configure(config)
+      @config = Convertr::Runner::OptParser.parse(opts)
+      Convertr.configure(@config)
     end
     # }}}
     def run # {{{
-      puts "Running"
+      Convertr::Convertor.new(@config.max_tasks).run
     end # }}}
   end
 end
