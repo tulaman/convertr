@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{convertr}
-  s.version = "0.0.0"
+  s.version = "0.0.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Ilya Lityuga", "Alexander Svetkin"]
-  s.date = %q{2010-10-08}
+  s.date = %q{2010-10-12}
   s.default_executable = %q{convertr}
   s.description = %q{Convertr works with database and handles converting tasks. It fetches files from remote sources and converts them to appropriate formats with ffmpeg}
   s.email = %q{ilya.lityuga@gmail.com}
@@ -28,8 +28,28 @@ Gem::Specification.new do |s|
      "bin/convertr",
      "convertr.gemspec",
      "lib/convertr.rb",
+     "lib/convertr/convertor.rb",
+     "lib/convertr/file.rb",
+     "lib/convertr/migration.rb",
+     "lib/convertr/runner.rb",
+     "lib/convertr/scheduler.rb",
+     "lib/convertr/scheduler/all_bt_first.rb",
+     "lib/convertr/scheduler/bt_600_first.rb",
+     "lib/convertr/scheduler_factory.rb",
+     "lib/convertr/task.rb",
+     "lib/tasks/convertr.rake",
+     "test/database.yml",
+     "test/factories/files.rb",
+     "test/factories/tasks.rb",
+     "test/fixtures/files.yml",
+     "test/fixtures/tasks.yml",
      "test/helper.rb",
-     "test/test_convertr.rb"
+     "test/settings.yml",
+     "test/test_convertor.rb",
+     "test/test_file.rb",
+     "test/test_scheduler_allbtfirst.rb",
+     "test/test_scheduler_factory.rb",
+     "test/test_task.rb"
   ]
   s.homepage = %q{http://github.com/tulaman/convertr}
   s.rdoc_options = ["--charset=UTF-8"]
@@ -38,8 +58,14 @@ Gem::Specification.new do |s|
   s.rubygems_version = %q{1.3.7}
   s.summary = %q{Useful utility for converting video files with ffmpeg}
   s.test_files = [
-    "test/helper.rb",
-     "test/test_convertr.rb"
+    "test/factories/files.rb",
+     "test/factories/tasks.rb",
+     "test/test_scheduler_allbtfirst.rb",
+     "test/test_scheduler_factory.rb",
+     "test/test_file.rb",
+     "test/helper.rb",
+     "test/test_task.rb",
+     "test/test_convertor.rb"
   ]
 
   if s.respond_to? :specification_version then
@@ -48,13 +74,19 @@ Gem::Specification.new do |s|
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
       s.add_development_dependency(%q<shoulda>, [">= 0"])
+      s.add_development_dependency(%q<mocha>, [">= 0"])
+      s.add_development_dependency(%q<factory_girl>, [">= 0"])
       s.add_runtime_dependency(%q<activerecord>, [">= 3.0.0"])
     else
       s.add_dependency(%q<shoulda>, [">= 0"])
+      s.add_dependency(%q<mocha>, [">= 0"])
+      s.add_dependency(%q<factory_girl>, [">= 0"])
       s.add_dependency(%q<activerecord>, [">= 3.0.0"])
     end
   else
     s.add_dependency(%q<shoulda>, [">= 0"])
+    s.add_dependency(%q<mocha>, [">= 0"])
+    s.add_dependency(%q<factory_girl>, [">= 0"])
     s.add_dependency(%q<activerecord>, [">= 3.0.0"])
   end
 end
