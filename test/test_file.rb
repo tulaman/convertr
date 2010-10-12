@@ -16,12 +16,15 @@ class TestFile < Test::Unit::TestCase
   end
   context "File" do
     setup do
-      @file = Convertr::File.new
+      @file = Factory.build(:file, :aspect => '16:9')
     end
     subject { @file }
     should have_many(:tasks)
     should "be valid" do
       assert @file.valid?
+    end
+    should "be able to calculate aspect ratio as float" do
+      assert_in_delta 1.777, @file.float_aspect, 0.001
     end
   end
 end
