@@ -1,0 +1,41 @@
+development: &non_production_settings
+  convertor:
+    tmp_dir: /tmp
+    ftp_user: test
+    ftp_pass: test
+    enc_pass:
+      - vpre: "fastfirstpass-flash"
+        pass: 1
+        an: ""
+        f: mp4
+      - vpre: "hq-flash"
+        pass: 2
+    enc_profiles:
+      sd:
+        b:  236k
+        bt: 236k
+        ab: 64k
+        ac: 1
+      hd:
+        b:  472k
+        bt: 472k
+        ab: 128k
+        ac: 2
+      hdp:
+        b:  872k
+        bt: 872k
+        ab: 128k
+        ac: 2
+    enc_global:
+      acodec: libfaac
+      vcodec: libx264
+      threads: 3
+      ar: 44100
+    ffmpeg: /usr/bin/ffmpeg
+    tmaker: /usr/local/bin/tmaker
+
+test:
+  <<: *non_production_settings
+
+production:
+  <<: *non_production_settings

@@ -4,6 +4,7 @@ require 'active_record/railtie'
 require 'convertr/runner'
 require 'convertr/scheduler'
 require 'convertr/scheduler_factory'
+require 'convertr/convertor'
 
 module Convertr
   module Version
@@ -23,7 +24,11 @@ module Convertr
     yield Config.instance if block_given?
     enviroment = ENV['RAILS_ENV'] || 'development'
     config.db_config = YAML.load_file(config.db_config_file)[enviroment]
-    config.settings = YAML.load_file(config.settings_file)[enviroment] if config.settings_file
+    if config.settings_file
+      YAML.load_file(config.settings_file)[enviroment]['convertor'].each do |k, v|
+        config.send("#{k}=", v)
+      end
+    end
     self.init!
   end
 

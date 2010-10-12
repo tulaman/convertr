@@ -6,5 +6,10 @@ module Convertr
     scope :with_convertor, lambda { |convertor|
       where(:convertor => convertor).order('broadcast_at asc')
     }
+
+    def float_aspect
+      (w, h) = aspect.split(':')
+      w.to_f / h.to_f
+    end
   end
 end
