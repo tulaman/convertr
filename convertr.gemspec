@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Ilya Lityuga", "Alexander Svetkin"]
-  s.date = %q{2010-10-12}
+  s.date = %q{2010-10-13}
   s.default_executable = %q{convertr}
   s.description = %q{Convertr works with database and handles converting tasks. It fetches files from remote sources and converts them to appropriate formats with ffmpeg}
   s.email = %q{ilya.lityuga@gmail.com}
@@ -47,9 +47,12 @@ Gem::Specification.new do |s|
      "test/settings.yml",
      "test/test_convertor.rb",
      "test/test_file.rb",
+     "test/test_runner.rb",
+     "test/test_scheduler.rb",
      "test/test_scheduler_allbtfirst.rb",
      "test/test_scheduler_factory.rb",
-     "test/test_task.rb"
+     "test/test_task.rb",
+     "test/test_version.rb"
   ]
   s.homepage = %q{http://github.com/tulaman/convertr}
   s.rdoc_options = ["--charset=UTF-8"]
@@ -58,12 +61,15 @@ Gem::Specification.new do |s|
   s.rubygems_version = %q{1.3.7}
   s.summary = %q{Useful utility for converting video files with ffmpeg}
   s.test_files = [
-    "test/factories/files.rb",
+    "test/test_version.rb",
+     "test/test_runner.rb",
+     "test/factories/files.rb",
      "test/factories/tasks.rb",
      "test/test_scheduler_allbtfirst.rb",
      "test/test_scheduler_factory.rb",
      "test/test_file.rb",
      "test/helper.rb",
+     "test/test_scheduler.rb",
      "test/test_task.rb",
      "test/test_convertor.rb"
   ]
