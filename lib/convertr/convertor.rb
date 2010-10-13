@@ -21,7 +21,7 @@ module Convertr
     CONVERTOR_PAUSE_DELAY = 120
     CONVERTOR_MAX_FETCH_TIME = 600
 
-    attr_accessor :scheduler, :max_tasks, :hostname, :initial_dir, :file, :task, :file_path, :work_path, :tasks
+    attr_accessor :scheduler, :max_tasks, :hostname, :initial_dir, :file, :task, :filepath, :work_path, :tasks, :working_dir
 
     def initialize(max_tasks = 0, scheduler = nil) # инициализация конертера {{{
       @max_tasks = max_tasks
@@ -37,11 +37,11 @@ module Convertr
       loop do
         break if File.exists? CONVERTOR_STOPFILE
         if !File.exists?(CONVERTOR_PAUSEFILE) and @task = @scheduler.schedule_next_task(@hostname)
-          task.update_attributes(
+          @task.update_attributes(
             :convert_status => process_task,
             :convert_stopped_at => Time.now
           )
-          break if @max_tasks > 0 && (@tasks += 1) > @max_tasks
+          break if @max_tasks > 0 && (@tasks += 1) >= @max_tasks
         else
           sleep(CONVERTOR_PAUSE_DELAY) && next
         end
@@ -52,17 +52,17 @@ module Convertr
 
     def process_task # выполнение конкретной задачи на конвертацию {{{
       @file = @task.file
-      @file_path = File.join(@conf.tmp_dir, @file.name)
-      @working_dir = File.join( File.dirname(@file_path), File.filename(@filepath) )
+      @filepath = File.join(@conf.tmp_dir, @file.filename)
+      @working_dir = File.join( File.dirname(@filepath), File.filename(@filepath) )
       @logger.info("Started #@filepath")
       begin
-        fetch_file(@file.source_location, @file.name)
+        fetch_file(@file.source_location, @file.filename)
         FileUtils.cd @working_dir
         process_profile(profile_by_bitrate(@task.bitrate))
         if @task.bitrate == 600
           count = calc_thumbnails_count(@file.duration)
           interval = (@file.duration / count).to_i
-          system(make_thumbnails_cmd(count, interval, 150, 0, 2)) or raise "thumbnails generation failed #{$?}"
+          system(make_thumbnails_cmd(count, interval, 150, nil, 2)) or raise "thumbnails generation failed #{$?}"
         end
         @logger.info("Done #@filepath")
       rescue StandardError => e
@@ -76,12 +76,12 @@ module Convertr
 
     def fetch_file(source_url, filename) # скачивание файла по FTP {{{
       FileUtils.mkpath(@working_dir)
-      dst_file = File.join(@working_dir, File.basename(filename))
+      dst_file = ::File.join(@working_dir, ::File.basename(filename))
       tmp_file = dst_file + ".part"
       started_at = Time.now
       loop do
-        return if File.exists? dst_file
-        if File.exists? tmp_file
+        return if ::File.exists? dst_file
+        if ::File.exists? tmp_file
           sleep(CONVERTOR_PAUSE_DELAY)
           if Time.now > started_at + CONVERTOR_MAX_FETCH_TIME
             FileUtils.rm_f tmp_file
@@ -94,18 +94,17 @@ module Convertr
       end
 
       url = URI.parse(source_url)
-      begin
-        ftp = Net::Ftp.open(url.host)
-        ftp.login(@conf.ftp_user, @conf.ftp_pass)
-        ftp.getbinaryfile(url.path, tmp_file, 1024)
-      rescue StandardError => e
-        ftp.close
-        FileUtils.rm_f tmp_file
-        raise e
+      Net::FTP.open(url.host) do |ftp|
+        begin
+          ftp.login(@conf.ftp_user, @conf.ftp_pass)
+          ftp.getbinaryfile(url.path, tmp_file, 1024)
+        rescue StandardError => e
+          FileUtils.rm_f tmp_file
+          raise e
+        end
       end
-      ftp.close
 
-      FileUtils.rename tmp_file, dst_file
+      FileUtils.move tmp_file, dst_file
     end # }}}
 
     def profile_by_bitrate(bitrate) # bitrate -> profile {{{
@@ -120,8 +119,8 @@ module Convertr
 
     def process_profile(pname) # конвертация, согласно профилю # {{{
       profile = @conf.enc_profiles[pname]
-      outfile = File.join(@working_dir, File.filename(@file.name), "-#{pname}-0.mp4")
-      infile = File.join(@working_dir, File.basename(@file.name))
+      outfile = File.join(@working_dir, File.filename(@file.filename), "-#{pname}-0.mp4")
+      infile = File.join(@working_dir, File.basename(@file.filename))
       output_dir = File.join(@conf.output_dir, @working_dir)
       FileUtils.mkpath output_dir unless File.exists? output_dir
       FileUtils.chdir output_dir
@@ -134,7 +133,7 @@ module Convertr
         system(cmd) or raise "system #{cmd} failed: #{$?}"
       end
 
-      outfile2 = File.join(@working_dir, File.filename(@file.name), "-#{pname}.mp4")
+      outfile2 = File.join(@working_dir, File.filename(@file.filename), "-#{pname}.mp4")
       cmd = "#{@conv.qtfaststart} #{outfile} #{outfile2}"
       system(cmd) or FileUtils.rm_f(outfile) && raise("system #{cmd} failed: #{$?}")
       FileUtils.cd '..'
@@ -142,14 +141,16 @@ module Convertr
     end # }}}
 
     def make_thumbnails_cmd(count, interval, w, h, postfix) # генерация тумбнейлов {{{
-      w = (h * @file.float_aspect).to_i if h && w.nil?
-      h = (w / @file.float_aspect).to_i if @file.aspect && w && h.nil?
+      file = task.file
+      w = (h * file.float_aspect).to_i if h && w.nil?
+      h = (w / file.float_aspect).to_i if file.aspect && w && h.nil?
       tstamps = (1..count).collect {|i| i * interval}
       params = ''
-      params += ' -c 20 ' if @task.crop?
-      params += ' -d ' if @task.deinterlace?
-      output_dir = File.join(@conf.output_dir, @working_dir)
-      pattern = File.join(@working_dir, File.filename(@file.name), "-%d-#{postfix}.jpg")
+      params += ' -c 20 ' if task.crop?
+      params += ' -d ' if task.deinterlace?
+      infile = ::File.join(@working_dir, ::File.basename(file.filename))
+      output_dir = ::File.join(@conf.output_dir, @working_dir)
+      pattern = ::File.join(@working_dir, ::File.filename(file.filename), "-%d-#{postfix}.jpg")
       "#{@conf.tmaker} -i #{infile} #{params} -w #{w} -h #{h} -o #{output_dir} #{tstamps.join(' ')}"
     end # }}}
 
@@ -173,10 +174,10 @@ module Convertr
         (params['croptop'], params['cropbottom'], params['cropleft'], params['cropright']) =
           case aspect
           when '16:9'
-            w += 32 && h += 18
+            w += 32 ; h += 18
             [10, 8, 16, 16]
           else # '4:3', '5:3' etc
-            w += 32 && h += 24
+            w += 32 ; h += 24
             [20, 4, 16, 16]
           end
       end

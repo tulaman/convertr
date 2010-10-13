@@ -33,6 +33,7 @@ development: &non_production_settings
       ar: 44100
     ffmpeg: /usr/bin/ffmpeg
     tmaker: /usr/local/bin/tmaker
+    output_dir: /tmp/output
 
 test:
   <<: *non_production_settings
