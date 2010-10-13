@@ -14,7 +14,7 @@ module Convertr
 
       private
 
-      def get_task_for_schedule # abstract
+      def get_task_for_schedule(convertor) # abstract
         raise "Should be overriden"
       end
 
