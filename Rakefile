@@ -44,6 +44,7 @@ rescue LoadError
   end
 end
 
+task :rcov => ['convertr:prepare_test']
 task :test => [:check_dependencies, 'convertr:prepare_test']
 
 task :default => :test
