@@ -6,7 +6,7 @@ class TestSchedulerAllbtfirst < Test::Unit::TestCase
       @scheduler = Convertr::SchedulerFactory.create('AllBtFirst')
     end
     should "find first task assigned for convertor" do
-      assert_equal 2, @scheduler.get_task_for_schedule('convertor1').id
+      assert_equal 3, @scheduler.get_task_for_schedule('convertor1').id
     end
   end
 end

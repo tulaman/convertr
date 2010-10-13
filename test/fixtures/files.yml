@@ -4,7 +4,7 @@ with_convertor1_1:
   location: /tmp
   enqueue_at: <%= Time.now %>
   convertor: convertor1
-  broadcast_at: <%= Time.now - 3600 * 24 %>
+  broadcast_at: <%= Time.now - 3600 * 24 * 2 %>
   src_size: 12345
   duration: 12345
   aspect: 3x4

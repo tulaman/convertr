@@ -20,11 +20,11 @@ module Convertr
         t.integer :file_id
         t.integer :bitrate
         t.string :convert_status, :limit => 20
-        t.boolean :convert_started
-        t.boolean :convert_stopped
+        t.datetime :convert_started_at
+        t.datetime :convert_stopped_at
         t.string :copy_status, :limit => 20
-        t.boolean :copy_started
-        t.boolean :copy_stopped
+        t.datetime :copy_started_at
+        t.datetime :copy_stopped_at
         t.boolean :crop
         t.boolean :deinterlace
       end

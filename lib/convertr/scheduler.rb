@@ -21,7 +21,7 @@ module Convertr
       def schedule(task, convertor)
         Convertr::Task.transaction do
           task.update_attributes(:convert_status => 'PROGRESS', :convert_started_at => Time.now)
-          task.file.update_attribute(:convertor => convertor)
+          task.file.update_attribute(:convertor, convertor)
         end
       end
     end
