@@ -8,6 +8,9 @@ class TestTask < Test::Unit::TestCase
     should "have not_completed scope" do
       assert_equal 3, Convertr::Task.not_completed.size
     end
+    should "have without_convertor scope" do
+      assert_equal 1, Convertr::Task.without_convertor.first.id
+    end
   end
 
   context "Task" do

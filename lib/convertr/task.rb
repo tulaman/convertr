@@ -6,5 +6,6 @@ module Convertr
     scope :for_convertor, lambda { |convertor|
       not_completed.includes(:file).where('files.convertor' => convertor).order('files.broadcast_at asc')
     }
+    scope :without_convertor, not_completed.includes(:file).where('files.convertor is null').order('files.broadcast_at asc')
   end
 end
