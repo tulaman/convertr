@@ -83,44 +83,44 @@ class TestConvertor < Test::Unit::TestCase
     #}}}
     context "for task with crop and deinterlace and file with aspect 4:3" do # {{{
       setup do
-        @convertor.working_dir = '/tmp'
-        file = Factory(:file, :aspect => '4:3', :filename => 'test.avi')
-        @convertor.task = Factory(:task, :file => file, :crop => true, :deinterlace => true)
+        @convertor.file = Factory(:file, :aspect => '4:3', :filename => 'x/y/test.avi')
+        @convertor.task = Factory(:task, :file => @convertor.file, :crop => true, :deinterlace => true)
       end
       should "prepare valid shell command for thumbnail generation" do # {{{
-        assert_equal "/usr/local/bin/tmaker -i /tmp/test.avi  -c 20  -d  -w 150 -h 112 -o /tmp/output/tmp 200 400 600",
+        assert_equal "/usr/local/bin/tmaker -i /tmp/test.avi  -c 20  -d  -w 150 -h 112 -o \"/tmp/output/x/y/test-%d-2.jpg\" 200 400 600",
           @convertor.instance_eval { make_thumbnails_cmd(3, 200, 150, nil, 2) }
       end # }}}
-    end #}}}
+    end
+    #}}}
     context "when source file is available locally" do # {{{
       setup do
-        @convertor.working_dir = '/tmp/test_working_dir'
-        FileUtils.mkpath '/tmp/test_working_dir'
-        FileUtils.touch '/tmp/test_working_dir/test.avi'
+        @convertor.file = Factory(:file, :filename => 'test.avi', :location => 'ftp://example.com/test.avi')
+        FileUtils.touch '/tmp/test.avi'
         Net::FTP.expects(:open).never
       end
       should "return immediately on attempt to fetch file" do
         assert_nil @convertor.instance_eval { fetch_file('ftp://example.com/test.avi', 'test.avi') }
       end
-    end # }}}
+    end
+    # }}}
     context "when source file is not available locally" do # {{{
       setup do
-        @convertor.working_dir = '/tmp/test_working_dir'
-        FileUtils.rm_rf '/tmp/test_working_dir'
+        @convertor.file = Factory(:file, :filename => 'test.avi', :location => 'ftp://example.com/test.avi')
+        FileUtils.rm_rf '/tmp/test.avi'
       end
 
       context "and ftp server works fine" do
         setup do
           ftp = mock()
           ftp.expects(:login).with('test','test')
-          ftp.expects(:getbinaryfile).with('test.avi', '/tmp/test_working_dir/test.avi.part', 1024)
+          ftp.expects(:getbinaryfile).with('test.avi', '/tmp/test/test.part', 1024)
           ftp.expects(:close)
           Net::FTP.expects(:new).with('example.com', nil, nil, nil).returns(ftp)
         end
         should "download file by FTP" do
           assert_equal 0, @convertor.instance_eval { fetch_file('ftp://example.com/test.avi', 'test.avi') }
-          assert !File.exists?('/tmp/test_working_dir/test.avi.part')
-          assert File.exists?('/tmp/test_working_dir/test.avi')
+          assert !File.exists?('/tmp/test/test.avi.part')
+          assert File.exists?('/tmp/test.avi')
         end
       end
 
@@ -136,10 +136,56 @@ class TestConvertor < Test::Unit::TestCase
           assert_raise Net::FTPError do
             @convertor.instance_eval { fetch_file('ftp://example.com/test.avi', 'test.avi') }
           end
-          assert !File.exists?('/tmp/test_working_dir/test.avi.part')
+          assert !File.exists?('/tmp/test/test.avi.part')
         end
       end
-    end # }}}
+    end
+    # }}}
+    context "processing file with some profile" do # {{{
+      setup do
+        @convertor.file = Factory(:file, :filename => 'x/y/test.avi')
+        @convertor.logger = Logger.new('/dev/null')
+        @convertor.expects(:mkcmd).twice.returns("echo OK > /dev/null").then.returns("echo OK > test-sd-0.mp4")
+        Convertr::Config.any_instance.stubs(:qtfaststart => 'mv')
+        @convertor.instance_eval { process_profile('sd') }
+      end
+      should "create converted file" do
+        assert File.exists?('/tmp/output/x/y/test-sd.mp4')
+      end
+      should "remove temporary dir" do
+        assert !File.exists?('sd')
+      end
+    end 
+    # }}}
+    context "successfuly processing some task" do
+      setup do
+        file = Factory(:file, :filename => 'test.avi', :location => 'ftp://example.com/test.avi', :duration => 600)
+        @convertor.task = Factory(:task, :file => file, :bitrate => 600)
+        @convertor.logger = Logger.new('/dev/null')
+        FileUtils.mkpath('/tmp/test')
+        processing = sequence('processing')
+        @convertor.expects(:fetch_file).with('ftp://example.com/test.avi', 'test.avi').in_sequence(processing).returns(true)
+        @convertor.expects(:process_profile).with('hd').in_sequence(processing).returns(true)
+        @convertor.expects(:make_thumbnails_cmd).with(3, 200, 150, nil, 2).in_sequence(processing).returns('echo OK>/dev/null')
+      end
+      should "return SUCCESS" do
+        assert_equal 'SUCCESS', @convertor.instance_eval { process_task }
+      end
+    end
+    context "getting ftp error on processing some task" do
+      setup do
+        file = Factory(:file, :filename => 'test.avi', :location => 'ftp://example.com/test.avi', :duration => 600)
+        @convertor.task = Factory(:task, :file => file, :bitrate => 600)
+        @convertor.logger = Logger.new('/dev/null')
+        FileUtils.mkpath('/tmp/test')
+        @convertor.expects(:fetch_file).with('ftp://example.com/test.avi', 'test.avi').raises(Net::FTPError)
+        @convertor.expects(:process_profile).never
+        @convertor.expects(:make_thumbnails_cmd).never
+      end
+      should "return FAILURE" do
+        assert_equal 'FAILURE', @convertor.instance_eval { process_task }
+      end
+    end
   end
 
   context "Convertor ran with max_tasks=2" do

@@ -21,7 +21,7 @@ module Convertr
     CONVERTOR_PAUSE_DELAY = 120
     CONVERTOR_MAX_FETCH_TIME = 600
 
-    attr_accessor :scheduler, :max_tasks, :hostname, :initial_dir, :file, :task, :filepath, :work_path, :tasks, :working_dir
+    attr_accessor :scheduler, :max_tasks, :hostname, :initial_dir, :file, :task, :tasks, :logger
 
     def initialize(max_tasks = 0, scheduler = nil) # инициализация конертера {{{
       @max_tasks = max_tasks
@@ -52,19 +52,17 @@ module Convertr
 
     def process_task # выполнение конкретной задачи на конвертацию {{{
       @file = @task.file
-      @filepath = File.join(@conf.tmp_dir, @file.filename)
-      @working_dir = File.join( File.dirname(@filepath), File.filename(@filepath) )
-      @logger.info("Started #@filepath")
+      @logger.info("Started #{original_file}")
       begin
-        fetch_file(@file.source_location, @file.filename)
-        FileUtils.cd @working_dir
+        fetch_file(@file.location, @file.filename)
+        FileUtils.cd indir
         process_profile(profile_by_bitrate(@task.bitrate))
         if @task.bitrate == 600
           count = calc_thumbnails_count(@file.duration)
           interval = (@file.duration / count).to_i
           system(make_thumbnails_cmd(count, interval, 150, nil, 2)) or raise "thumbnails generation failed #{$?}"
         end
-        @logger.info("Done #@filepath")
+        @logger.info("Done #{original_file}")
       rescue StandardError => e
         @logger.error e.message
         return 'FAILURE'
@@ -75,12 +73,11 @@ module Convertr
     end # }}}
 
     def fetch_file(source_url, filename) # скачивание файла по FTP {{{
-      FileUtils.mkpath(@working_dir)
-      dst_file = ::File.join(@working_dir, ::File.basename(filename))
-      tmp_file = dst_file + ".part"
+      FileUtils.mkpath(indir)
+      tmp_file = work_name + ".part"
       started_at = Time.now
       loop do
-        return if ::File.exists? dst_file
+        return if ::File.exists? original_file
         if ::File.exists? tmp_file
           sleep(CONVERTOR_PAUSE_DELAY)
           if Time.now > started_at + CONVERTOR_MAX_FETCH_TIME
@@ -104,7 +101,7 @@ module Convertr
         end
       end
 
-      FileUtils.move tmp_file, dst_file
+      FileUtils.move tmp_file, original_file
     end # }}}
 
     def profile_by_bitrate(bitrate) # bitrate -> profile {{{
@@ -119,23 +116,21 @@ module Convertr
 
     def process_profile(pname) # конвертация, согласно профилю # {{{
       profile = @conf.enc_profiles[pname]
-      outfile = File.join(@working_dir, File.filename(@file.filename), "-#{pname}-0.mp4")
-      infile = File.join(@working_dir, File.basename(@file.filename))
-      output_dir = File.join(@conf.output_dir, @working_dir)
-      FileUtils.mkpath output_dir unless File.exists? output_dir
-      FileUtils.chdir output_dir
-      FileUtils.mkdir pname unless File.exists? pname
-      FileUtils.chdir pname
+      outfile = filename_with_suffix("-#{pname}-0.mp4") # => z-sd-0.mp4
+      FileUtils.mkdir(pname) && FileUtils.chdir(pname)
       
       @conf.enc_pass.each_with_index do |enc_pass_params, i|
-        cmd = mkcmd(enc_pass_params, pname, infile, i == 0 ? '/dev/null' : outfile, @file.aspect)
+        cmd = mkcmd(enc_pass_params, pname, original_file, i == 0 ? '/dev/null' : outfile, @file.aspect)
         @logger.info(cmd)
         system(cmd) or raise "system #{cmd} failed: #{$?}"
       end
 
-      outfile2 = File.join(@working_dir, File.filename(@file.filename), "-#{pname}.mp4")
-      cmd = "#{@conv.qtfaststart} #{outfile} #{outfile2}"
+      outfile2 = filename_with_suffix("-#{pname}.mp4") # => z-sd.mp4
+      cmd = "#{@conf.qtfaststart} #{outfile} #{outfile2}"
       system(cmd) or FileUtils.rm_f(outfile) && raise("system #{cmd} failed: #{$?}")
+      FileUtils.rm_f(outfile)
+      FileUtils.mkpath outdir # => /var/x/y
+      FileUtils.move outfile2, outdir
       FileUtils.cd '..'
       FileUtils.rm_rf pname
     end # }}}
@@ -148,10 +143,8 @@ module Convertr
       params = ''
       params += ' -c 20 ' if task.crop?
       params += ' -d ' if task.deinterlace?
-      infile = ::File.join(@working_dir, ::File.basename(file.filename))
-      output_dir = ::File.join(@conf.output_dir, @working_dir)
-      pattern = ::File.join(@working_dir, ::File.filename(file.filename), "-%d-#{postfix}.jpg")
-      "#{@conf.tmaker} -i #{infile} #{params} -w #{w} -h #{h} -o #{output_dir} #{tstamps.join(' ')}"
+      pattern = filename_with_suffix("-%d-#{postfix}.jpg")
+      "#{@conf.tmaker} -i #{original_file} #{params} -w #{w} -h #{h} -o \"#{outdir}/#{pattern}\" #{tstamps.join(' ')}"
     end # }}}
 
     def mkcmd(enc_pass, pname, infile, outfile, aspect) # подготовка команды на конвертацию {{{
@@ -196,5 +189,31 @@ module Convertr
       else 24
       end
     end # }}}
+
+    # тут чёрт ногу сломит с этими картами директорий
+    # /tmp/test.avi
+    def original_file
+      ::File.join(@conf.tmp_dir, ::File.basename(@file.filename))
+    end
+
+    # /tmp/test
+    def indir
+      ::File.join(@conf.tmp_dir, ::File.filename(@file.filename))
+    end
+
+    # /tmp/test/test
+    def work_name
+      ::File.join(@conf.tmp_dir, ::File.filename(@file.filename), ::File.filename(@file.filename))
+    end
+
+    # test + suffix
+    def filename_with_suffix(suffix)
+      ::File.filename(@file.filename) + suffix
+    end
+
+    # /var/x/y
+    def outdir
+      ::File.join(@conf.output_dir, ::File.dirname(@file.filename))
+    end
   end
 end
