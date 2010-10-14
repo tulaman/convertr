@@ -73,6 +73,7 @@ module Convertr
       'SUCCESS'
     end # }}}
 
+    # {{{
     # Уже находясь в нужной директории, скачиваем файл по
     # source_url через FTP во временный файл filename.part
     # затем переименовываем его в filename
@@ -81,7 +82,7 @@ module Convertr
     # другой процесс уже занят скачиванием файла, если
     # ожидание продлится больше некоторого времени, удаляем
     # временный файл и скачиваем самостоятельно
-    def fetch_file(source_url, filename) # скачивание файла по FTP {{{
+    def fetch_file(source_url, filename) 
       tmp_file = filename + ".part"
       started_at = Time.now
       loop do
@@ -199,19 +200,14 @@ module Convertr
     end # }}}
 
     # тут чёрт ногу сломит с этими картами директорий
-    # /tmp/test.avi
+    # /tmp/test/test.avi
     def original_file
-      ::File.join(@conf.tmp_dir, ::File.basename(@file.filename))
+      ::File.join(@conf.tmp_dir, ::File.filename(@file.filename), ::File.basename(@file.filename))
     end
 
     # /tmp/test
     def indir
       ::File.join(@conf.tmp_dir, ::File.filename(@file.filename))
-    end
-
-    # /tmp/test/test
-    def work_name
-      ::File.join(@conf.tmp_dir, ::File.filename(@file.filename), ::File.filename(@file.filename))
     end
 
     # test + suffix

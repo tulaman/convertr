@@ -87,7 +87,7 @@ class TestConvertor < Test::Unit::TestCase
         @convertor.task = Factory(:task, :file => @convertor.file, :crop => true, :deinterlace => true)
       end
       should "prepare valid shell command for thumbnail generation" do # {{{
-        assert_equal "/usr/local/bin/tmaker -i /tmp/test.avi  -c 20  -d  -w 150 -h 112 -o \"/tmp/output/x/y/test-%d-2.jpg\" 200 400 600",
+        assert_equal "/usr/local/bin/tmaker -i /tmp/test/test.avi  -c 20  -d  -w 150 -h 112 -o \"/tmp/output/x/y/test-%d-2.jpg\" 200 400 600",
           @convertor.instance_eval { make_thumbnails_cmd(3, 200, 150, nil, 2) }
       end # }}}
     end
@@ -155,7 +155,7 @@ class TestConvertor < Test::Unit::TestCase
       end
     end 
     # }}}
-    context "successfuly processing some task" do
+    context "successfuly processing some task" do # {{{
       setup do
         file = Factory(:file, :filename => 'test.avi', :location => 'ftp://example.com/test.avi', :duration => 600)
         @convertor.task = Factory(:task, :file => file, :bitrate => 600)
@@ -170,7 +170,8 @@ class TestConvertor < Test::Unit::TestCase
         assert_equal 'SUCCESS', @convertor.instance_eval { process_task }
       end
     end
-    context "getting ftp error on processing some task" do
+    # }}}
+    context "getting ftp error on processing some task" do # {{{
       setup do
         file = Factory(:file, :filename => 'test.avi', :location => 'ftp://example.com/test.avi', :duration => 600)
         @convertor.task = Factory(:task, :file => file, :bitrate => 600)
@@ -182,7 +183,7 @@ class TestConvertor < Test::Unit::TestCase
       end
       should "return FAILURE" do
         assert_equal 'FAILURE', @convertor.instance_eval { process_task }
-      end
+      end #}}}
     end
   end
 
