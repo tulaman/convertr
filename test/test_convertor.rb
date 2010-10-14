@@ -94,33 +94,31 @@ class TestConvertor < Test::Unit::TestCase
     #}}}
     context "when source file is available locally" do # {{{
       setup do
-        @convertor.file = Factory(:file, :filename => 'test.avi', :location => 'ftp://example.com/test.avi')
-        FileUtils.touch '/tmp/test.avi'
+        FileUtils.touch '/tmp/test/test.avi'
         Net::FTP.expects(:open).never
       end
       should "return immediately on attempt to fetch file" do
-        assert_nil @convertor.instance_eval { fetch_file('ftp://example.com/test.avi', 'test.avi') }
+        assert_nil @convertor.instance_eval { fetch_file('ftp://example.com/test.avi', '/tmp/test/test.avi') }
       end
     end
     # }}}
     context "when source file is not available locally" do # {{{
       setup do
-        @convertor.file = Factory(:file, :filename => 'test.avi', :location => 'ftp://example.com/test.avi')
-        FileUtils.rm_rf '/tmp/test.avi'
+        FileUtils.rm_rf '/tmp/test/test.avi'
       end
 
       context "and ftp server works fine" do
         setup do
           ftp = mock()
           ftp.expects(:login).with('test','test')
-          ftp.expects(:getbinaryfile).with('test.avi', '/tmp/test/test.part', 1024)
+          ftp.expects(:getbinaryfile).with('test.avi', '/tmp/test/test.avi.part', 1024)
           ftp.expects(:close)
           Net::FTP.expects(:new).with('example.com', nil, nil, nil).returns(ftp)
         end
         should "download file by FTP" do
-          assert_equal 0, @convertor.instance_eval { fetch_file('ftp://example.com/test.avi', 'test.avi') }
+          assert_equal 0, @convertor.instance_eval { fetch_file('ftp://example.com/test.avi', '/tmp/test/test.avi') }
           assert !File.exists?('/tmp/test/test.avi.part')
-          assert File.exists?('/tmp/test.avi')
+          assert File.exists?('/tmp/test/test.avi')
         end
       end
 
@@ -134,7 +132,7 @@ class TestConvertor < Test::Unit::TestCase
         end
         should "remove tmp file and raise error" do
           assert_raise Net::FTPError do
-            @convertor.instance_eval { fetch_file('ftp://example.com/test.avi', 'test.avi') }
+            @convertor.instance_eval { fetch_file('ftp://example.com/test.avi', '/tmp/test/test.avi') }
           end
           assert !File.exists?('/tmp/test/test.avi.part')
         end

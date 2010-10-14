@@ -54,8 +54,9 @@ module Convertr
       @file = @task.file
       @logger.info("Started #{original_file}")
       begin
+        FileUtils.mkpath(indir)
+        FileUtils.cd(indir)
         fetch_file(@file.location, @file.filename)
-        FileUtils.cd indir
         process_profile(profile_by_bitrate(@task.bitrate))
         if @task.bitrate == 600
           count = calc_thumbnails_count(@file.duration)
@@ -72,12 +73,19 @@ module Convertr
       'SUCCESS'
     end # }}}
 
+    # Уже находясь в нужной директории, скачиваем файл по
+    # source_url через FTP во временный файл filename.part
+    # затем переименовываем его в filename
+    # Если файл уже скачан, завершаем работу
+    # Если находим временный файл - ждём, т.к., возможно
+    # другой процесс уже занят скачиванием файла, если
+    # ожидание продлится больше некоторого времени, удаляем
+    # временный файл и скачиваем самостоятельно
     def fetch_file(source_url, filename) # скачивание файла по FTP {{{
-      FileUtils.mkpath(indir)
-      tmp_file = work_name + ".part"
+      tmp_file = filename + ".part"
       started_at = Time.now
       loop do
-        return if ::File.exists? original_file
+        return if ::File.exists? filename
         if ::File.exists? tmp_file
           sleep(CONVERTOR_PAUSE_DELAY)
           if Time.now > started_at + CONVERTOR_MAX_FETCH_TIME
@@ -101,7 +109,7 @@ module Convertr
         end
       end
 
-      FileUtils.move tmp_file, original_file
+      FileUtils.move tmp_file, filename
     end # }}}
 
     def profile_by_bitrate(bitrate) # bitrate -> profile {{{
