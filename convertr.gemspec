@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{convertr}
-  s.version = "0.0.2"
+  s.version = "0.1.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Ilya Lityuga", "Alexander Svetkin"]
-  s.date = %q{2010-10-13}
+  s.date = %q{2010-10-14}
   s.default_executable = %q{convertr}
   s.description = %q{Convertr works with database and handles converting tasks. It fetches files from remote sources and converts them to appropriate formats with ffmpeg}
   s.email = %q{ilya.lityuga@gmail.com}
